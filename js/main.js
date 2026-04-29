@@ -96,6 +96,10 @@
     });
 
 })(jQuery);
+// เก็บข้อมูลสินค้าทั้งหมดไว้ใน Global State เพื่อใช้กรองข้อมูลได้ทันทีโดยไม่ต้อง Fetch ใหม่
+let allProducts = [];
+// เพิ่มตัวแปรสำหรับจัดการเวลา Delay (Debounce)
+let searchTimeout = null;
 
 /**
  * 1. ENTRY POINT: requestProducts()
@@ -118,13 +122,10 @@ async function requestProducts() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Data Flow Step 3: Parse the JSON
-        // We extract the raw text from the response and parse it into a native JavaScript Array.
-        const productsData = await response.json();
-
-        // Data Flow Step 4: Pass data to the UI layer
-        // We hand the processed array over to the renderUI function.
-        renderUI(productsData);
+        allProducts = await response.json(); // บันทึกข้อมูลเข้า State
+        renderUI(allProducts); // แสดงผลครั้งแรก (ทั้งหมด)
+        
+        setupEventListeners(); // ตั้งค่าปุ่มค้นหาและหมวดหมู่หลังจากโหลดข้อมูลเสร็จ
 
     } catch (error) {
         console.error('Network or parsing error:', error);
@@ -194,14 +195,121 @@ function renderUI(products, error = null) {
     container.innerHTML = productsHTML;
 }
 
+/**
+ * ฟังก์ชันแสดง UI กำลังโหลดระหว่างการค้นหา
+ */
+function showSearchLoading() {
+    const container = document.getElementById('product-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-5" style="min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="mt-3 text-secondary">กำลังค้นหาสินค้า...</h5>
+            </div>
+        `;
+    }
+}
+
+/**
+ * ฟังก์ชันหลักในการกรองข้อมูล (เพิ่มระบบ Delay และ Loading)
+ * @param {string} type - 'category' หรือ 'keyword'
+ * @param {string} value - ค่าที่ต้องการค้นหา
+ */
+function searchProducts(type, value) {
+    // 1. เรียกใช้งาน UI โหลดข้อมูลทันทีที่มีการคลิกหรือพิมพ์
+    showSearchLoading();
+
+    // 2. ถ้ามีการค้นหาค้างอยู่ก่อนหน้านี้ ให้ยกเลิกทิ้ง (Debounce)
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+
+    // 3. เริ่มหน่วงเวลา (ตั้งไว้ที่ 800 มิลลิวินาที หรือ 0.8 วินาที)
+    searchTimeout = setTimeout(() => {
+        let filtered = [];
+        const term = value.trim().toLowerCase();
+
+        // ตรรกะการกรองข้อมูล (เหมือนของเดิม)
+        if (type === 'category') {
+            filtered = (value === 'all') 
+                ? allProducts 
+                : allProducts.filter(p => p.category === value);
+        } 
+        else if (type === 'keyword') {
+            if (!term) {
+                filtered = allProducts;
+            } else {
+                filtered = allProducts.filter(p => 
+                    p.name.toLowerCase().includes(term) || 
+                    p.description.toLowerCase().includes(term)
+                );
+            }
+        }
+
+        // 4. จัดการกรณี "ไม่พบสินค้า" ให้แสดง UI แทนการใช้ alert()
+        if (filtered.length === 0) {
+            const container = document.getElementById('product-container');
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="fa fa-search-minus fa-4x text-warning mb-3"></i>
+                    <h4 class="text-secondary">ไม่พบสินค้า "${value}"</h4>
+                    <p class="text-muted">ลองค้นหาด้วยคำอื่น หรือคลิกดูสินค้าทั้งหมดด้านล่าง</p>
+                    <button class="btn btn-primary rounded-pill px-4 mt-3" onclick="searchProducts('category', 'all')">ดูสินค้าทั้งหมด</button>
+                </div>
+            `;
+            return; // หยุดการทำงาน ไม่ต้องส่งไป renderUI
+        }
+
+        // 5. ส่งข้อมูลที่กรองเสร็จแล้วไปวาดบนหน้าเว็บ
+        renderUI(filtered);
+
+    }, 500); // <--- ปรับความช้า/เร็วของการ Load ได้ที่ตัวเลขนี้ (1000 = 1 วินาที)
+}
+
+/**
+ * ตั้งค่า Event Listeners ทั้งหมดในจุดเดียว
+ */
+function setupEventListeners() {
+    // 1. จัดการการคลิกหมวดหมู่
+    const categoryLinks = document.querySelectorAll('.category-link');
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const category = link.getAttribute('data-category');
+            searchProducts('category', category);
+        });
+    });
+
+    // 2. จัดการการค้นหาผ่าน Input Box
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+
+    if (searchInput && searchButton) {
+        // คลิกไอคอนค้นหา
+        searchButton.addEventListener('click', () => {
+            searchProducts('keyword', searchInput.value);
+        });
+
+        // ดักจับทุกครั้งที่มีการพิมพ์ (Real-time Search with Debouncing)
+        searchInput.addEventListener('input', () => {
+            // โค้ดนี้จะถูกเรียกทุกตัวอักษรที่พิมพ์
+            // แต่ตัวฟังก์ชัน searchProducts มีกลไกเคลียร์เวลา (clearTimeout) 
+            // ทำให้มันจะประมวลผลจริงๆ ก็ต่อเมื่อผู้ใช้หยุดพิมพ์ไปแล้ว 0.8 วินาที
+            searchProducts('keyword', searchInput.value);
+        });
+
+        // (ทางเลือก) ยังคงเก็บการกด Enter ไว้เผื่อผู้ใช้ใจร้อนพิมพ์จบแล้วกด Enter ทันที
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // ป้องกันไม่ให้หน้าเว็บรีเฟรชถ้าอยู่ในฟอร์ม
+                searchProducts('keyword', searchInput.value);
+            }
+        });
+    }
+}
+
 // 3. INITIALIZATION
 // Wait for the HTML document to be fully loaded before starting the sequence.
 document.addEventListener('DOMContentLoaded', requestProducts);
-
-
-// Utility function for your "Add to Cart" button
-function addToCart(event, productId) {
-    event.preventDefault(); 
-    console.log(`Adding product ${productId} to cart...`);
-    // Future Cart Logic will go here
-}
