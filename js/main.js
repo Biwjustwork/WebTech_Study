@@ -180,7 +180,7 @@ function renderUI(products, error = null) {
                     <p>${product.description}</p>
                     <div class="d-flex justify-content-between flex-lg-wrap">
                         <p class="text-dark fs-5 fw-bold mb-0">$${product.price.toFixed(2)} / ${product.unit}</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary" onclick="addToCart(event, ${product.id})">
+                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary add-to-cart" data-id="${product.id}">
                             <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
                         </a>
                     </div>
