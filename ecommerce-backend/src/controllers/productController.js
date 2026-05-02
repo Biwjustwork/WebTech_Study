@@ -1,28 +1,19 @@
 const productService = require('../services/productService');
 
-/**
- * @desc    Fetch all products
- * @route   GET /api/products
- * @access  Public
- */
 const getProducts = async (req, res) => {
     try {
-        const products = await productService.getAllProducts();
-        
-        // Standardized JSON response format
-        res.status(200).json({
-            success: true,
-            count: products.length,
-            data: products
-        });
+        // รับ Parameter ชื่อ category จาก Query String (เช่น /api/products?category=fruits)
+        const category = req.query.category;
+
+        // เรียกใช้ Service เพื่อดึงข้อมูลสินค้า
+        const products = await productService.getProductsByCategory(category);
+
+        // ส่ง Response 200 OK สำเร็จ พร้อมคืนค่าข้อมูลเป็น JSON Array
+        res.status(200).json(products);
     } catch (error) {
-        console.error(`[Error] productController.getProducts: ${error.message}`);
-        
-        // Return a generic 500 error to the client to avoid leaking stack traces
-        res.status(500).json({
-            success: false,
-            message: 'Server Error: Unable to fetch products at this time.'
-        });
+        // จัดการ Error Handling: หากเกิดข้อผิดพลาด ส่ง 500 Internal Server Error
+        console.error("Error fetching products:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
