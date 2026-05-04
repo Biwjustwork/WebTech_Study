@@ -1,61 +1,70 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
 
-// TODO: Import your actual User model here
-const User = require('../models/user'); 
+// กำหนด Path ไปยังไฟล์ users.json (อ้างอิงจากโฟลเดอร์ปัจจุบัน src/routes/)
+const usersFilePath = path.join(__dirname, '../../data/users.json');
 
-// POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', (req, res) => {
     try {
-        const { email, password } = req.body;
+        // แนะนำให้ใส่ .trim() เพื่อตัดช่องว่างหน้า/หลังที่อาจจะเผลอพิมพ์ติดมา
+        const email = req.body.email ? req.body.email.trim() : '';
+        const password = req.body.password || '';
+
+        console.log("-----------------------------------------");
+        console.log(`[DEBUG] 1. Login attempt for Email: "${email}"`);
+        console.log(`[DEBUG] 2. Raw Password received: "${password}"`);
 
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required.' });
         }
 
-        // 1. Find the user (Replace with your actual DB query logic)
-        // const user = await User.findOne({ email });
-        
-        // --- TEMPORARY MOCK USER FOR TESTING ---
-        // We are mocking the DB response based on the MD5 hash setup we discussed earlier.
-        // Replace this block with the real DB query once your database is connected.
-        const user = {
-            _id: 'user_12345',
-            email: 'alice.w@example.com',
-            passwordHash: '$2b$10$YourBcryptHashedPasswordHere' // This should be a bcrypt hash in production!
-        };
+        const usersData = fs.readFileSync(usersFilePath, 'utf8');
+        const users = JSON.parse(usersData);
 
-        if (!user || user.email !== email) {
+        const user = users.find(u => u.username === email);
+
+        if (!user) {
+            console.log("[DEBUG] 3. ❌ User not found in users.json!");
+            return res.status(401).json({ error: 'Invalid email or password.' });
+        }
+        
+        console.log(`[DEBUG] 3. ✅ User found: ${user.username}`);
+
+        const submittedPasswordHash = crypto.createHash('md5').update(password).digest('hex');
+        
+        console.log(`[DEBUG] 4. Expected Hash (In JSON):  ${user.password_hash}`);
+        console.log(`[DEBUG] 5. Actual Hash (Calculated): ${submittedPasswordHash}`);
+
+        if (submittedPasswordHash !== user.password_hash) {
+            console.log("[DEBUG] 6. ❌ Password Hash MISMATCH!");
             return res.status(401).json({ error: 'Invalid email or password.' });
         }
 
-        // 2. Compare passwords
-        // Note: For testing your existing MD5 mock data, bcrypt.compare will fail. 
-        // You will need to hash passwords with bcrypt during the registration phase.
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
-        
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid email or password.' });
-        }
+        console.log("[DEBUG] 6. ✅ Password Match! Generating Token...");
 
-        // 3. Generate JWT
+        // ... (โค้ดส่วนออก JWT token เหมือนเดิม) ...
         const token = jwt.sign(
-            { userId: user._id, email: user.email },
-            process.env.JWT_SECRET,
+            { email: user.username, firstName: user.first_name },
+            process.env.JWT_SECRET || 'super_secure_random_string',
             { expiresIn: '1h' }
         );
 
-        // 4. Send response
-        res.status(200).json({
+        return res.status(200).json({
             message: 'Authentication successful',
-            token: token
+            token: token,
+            user: {
+                firstName: user.first_name,
+                email: user.username
+            }
         });
 
     } catch (error) {
         console.error('Login Error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 });
 

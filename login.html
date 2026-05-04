@@ -131,30 +131,6 @@
     </div>
 
     <!-- JavaScript to toggle views -->
-    <script>
-        function toggleAuth(view) {
-            const loginSection = document.getElementById('login-section');
-            const registerSection = document.getElementById('register-section');
-
-            if (view === 'register') {
-                loginSection.classList.add('hidden');
-                registerSection.classList.remove('hidden');
-            } else {
-                registerSection.classList.add('hidden');
-                loginSection.classList.remove('hidden');
-            }
-        }
-
-        // Basic front-end validation for password matching
-        document.getElementById('register-form').addEventListener('submit', function(e) {
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('registerConfirmPassword').value;
-
-            if (password !== confirmPassword) {
-                e.preventDefault(); // Stop form submission
-                alert("Passwords do not match. Please try again.");
-            }
-        });
-    </script>
+    <script src="js/login.js"></script>
 </body>
 </html>

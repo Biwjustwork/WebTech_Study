@@ -1,21 +1,22 @@
 const express = require('express');
-// Add this if you aren't already using it to parse JSON bodies
 const bodyParser = require('body-parser'); 
-require('dotenv').config(); // Ensure you are loading environment variables
+const cors = require('cors'); // สำคัญมากสำหรับการเชื่อมต่อกับ Frontend แยก
+require('dotenv').config(); 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.use(cors()); // อนุญาตให้ Frontend ยิง Request เข้ามาได้
 app.use(bodyParser.json());
 
 // Import Routes
-const productRoutes = require('./src/routes/products');
-const authRoutes = require('./src/routes/auth'); // <-- Import the new auth route
+const authRoutes = require('./src/routes/auth');
+const productRoutes = require('./src/routes/products'); // ถ้ามี
 
 // Mount Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/auth', authRoutes); // <-- Mount auth routes at /api/auth
 
 // Start Server
 app.listen(PORT, () => {
