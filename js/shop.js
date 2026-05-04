@@ -107,7 +107,7 @@ let searchTimeout = null;
  */
 async function requestProducts() {
     // กำหนด URL ไปที่ Backend API ที่สร้างด้วย Node.js/Express
-    const apiURL = 'http://localhost:3000/api/products';
+    const apiURL = 'http://localhost:5000/api/products';
     
     try {
         const response = await fetch(apiURL);
