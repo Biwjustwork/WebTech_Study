@@ -1,19 +1,23 @@
 const express = require('express');
+// Add this if you aren't already using it to parse JSON bodies
+const bodyParser = require('body-parser'); 
+require('dotenv').config(); // Ensure you are loading environment variables
+
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-// นำเข้า Route ของ Products
+// Middleware
+app.use(bodyParser.json());
+
+// Import Routes
 const productRoutes = require('./src/routes/products');
+const authRoutes = require('./src/routes/auth'); // <-- Import the new auth route
 
-// Middleware สำหรับแยกแยะ JSON Request (เผื่อใช้งานในอนาคต)
-app.use(express.json());
-
-// สร้าง Endpoint หลัก: /api/products และผูกเข้ากับ Route ที่เราสร้างไว้
+// Mount Routes
 app.use('/api/products', productRoutes);
+app.use('/api/auth', authRoutes); // <-- Mount auth routes at /api/auth
 
-// เริ่มต้นเปิดเซิร์ฟเวอร์
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`,
-        ' then test: http://localhost:3000/api/products?category=Fruits'
-    );
+// Start Server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
