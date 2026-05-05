@@ -1,6 +1,6 @@
 [
   {
-    "id": 1,
+    "id": "1",
     "name": "Grapes",
     "category": "Fruits",
     "image_url": "img/fruite-item-5.jpg",
@@ -10,7 +10,7 @@
     "quantity": 100
   },
   {
-    "id": 2,
+    "id": "2",
     "name": "Organic Apples",
     "category": "Fruits",
     "image_url": "img/fruite-item-1.jpg",
@@ -20,7 +20,7 @@
     "quantity": 100
   },
   {
-    "id": 3,
+    "id": "3",
     "name": "Fresh Bananas",
     "category": "Fruits",
     "image_url": "img/fruite-item-2.jpg",
@@ -30,7 +30,7 @@
     "quantity": 100
   },
   {
-    "id": 4,
+    "id": "4",
     "name": "Navel Oranges",
     "category": "Fruits",
     "image_url": "img/fruite-item-3.jpg",
@@ -40,7 +40,7 @@
     "quantity": 100
   },
   {
-    "id": 5,
+    "id": "5",
     "name": "Strawberries",
     "category": "Fruits",
     "image_url": "img/fruite-item-4.jpg",
@@ -50,7 +50,7 @@
     "quantity": 100
   },
   {
-    "id": 6,
+    "id": "6",
     "name": "Watermelon",
     "category": "Fruits",
     "image_url": "img/fruite-item-6.jpg",
@@ -60,7 +60,7 @@
     "quantity": 100
   },
   {
-    "id": 7,
+    "id": "7",
     "name": "Fresh Carrots",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-1.jpg",
@@ -70,7 +70,7 @@
     "quantity": 100
   },
   {
-    "id": 8,
+    "id": "8",
     "name": "Broccoli Crowns",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-2.jpg",
@@ -80,7 +80,7 @@
     "quantity": 100
   },
   {
-    "id": 9,
+    "id": "9",
     "name": "Roma Tomatoes",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-3.png",
@@ -90,7 +90,7 @@
     "quantity": 100
   },
   {
-    "id": 10,
+    "id": "10",
     "name": "Red Bell Peppers",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-4.jpg",
@@ -100,7 +100,7 @@
     "quantity": 100
   },
   {
-    "id": 11,
+    "id": "11",
     "name": "Russet Potatoes",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-5.jpg",
@@ -110,7 +110,7 @@
     "quantity": 100
   },
   {
-    "id": 12,
+    "id": "12",
     "name": "Baby Spinach",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-6.jpg",
@@ -120,7 +120,7 @@
     "quantity": 100
   },
   {
-    "id": 13,
+    "id": "13",
     "name": "Mangoes",
     "category": "Fruits",
     "image_url": "img/fruite-item-1.jpg",
@@ -130,7 +130,7 @@
     "quantity": 100
   },
   {
-    "id": 14,
+    "id": "14",
     "name": "Pineapple",
     "category": "Fruits",
     "image_url": "img/fruite-item-2.jpg",
@@ -140,7 +140,7 @@
     "quantity": 100
   },
   {
-    "id": 15,
+    "id": "15",
     "name": "Blueberries",
     "category": "Fruits",
     "image_url": "img/fruite-item-3.jpg",
@@ -150,7 +150,7 @@
     "quantity": 100
   },
   {
-    "id": 16,
+    "id": "16",
     "name": "Yellow Onions",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-1.jpg",
@@ -160,7 +160,7 @@
     "quantity": 100
   },
   {
-    "id": 17,
+    "id": "17",
     "name": "Garlic Bulbs",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-2.jpg",
@@ -170,7 +170,7 @@
     "quantity": 100
   },
   {
-    "id": 18,
+    "id": "18",
     "name": "Cucumbers",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-4.jpg",
@@ -180,7 +180,7 @@
     "quantity": 100
   },
   {
-    "id": 19,
+    "id": "19",
     "name": "Peaches",
     "category": "Fruits",
     "image_url": "img/fruite-item-5.jpg",
@@ -190,7 +190,7 @@
     "quantity": 100
   },
   {
-    "id": 20,
+    "id": "20",
     "name": "Avocados",
     "category": "Vegetables",
     "image_url": "img/vegetable-item-6.jpg",

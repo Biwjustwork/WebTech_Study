@@ -2,7 +2,7 @@
 
 /**
  * ฟังก์ชันหลักในการจัดการตะกร้า (ครอบคลุมขั้นตอนที่ 2 ถึง 6)
- * @param {string} id - รหัสสินค้าที่ส่งเข้ามา
+ * @param {integer} id - รหัสสินค้าที่ส่งเข้ามา
  */
 function handleAddToCart(id) {
     // ขั้นตอนที่ 2: โหลด cart array ใน local storage 
