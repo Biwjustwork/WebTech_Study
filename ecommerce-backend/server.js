@@ -6,7 +6,7 @@ require('dotenv').config();
 const app = express();
 // อนุญาตให้ Express เสิร์ฟไฟล์ Static จากโฟลเดอร์ปัจจุบันหรือโฟลเดอร์ที่คุณเก็บไฟล์ Front-end ไว้
 // เช่น ถ้าไฟล์ css/, js/, img/ อยู่ในโฟลเดอร์ public
-app.use(express.static(path.join(__dirname, 'public')));
+//app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 const PORT = process.env.PORT || 5000;
 

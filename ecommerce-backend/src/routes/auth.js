@@ -25,7 +25,7 @@ router.post('/login', (req, res) => {
         const usersData = fs.readFileSync(usersFilePath, 'utf8');
         const users = JSON.parse(usersData);
 
-        const user = users.find(u => u.username === email);
+        const user = users.find(u => u.email === email);
 
         if (!user) {
             console.log("[DEBUG] 3. ❌ User not found in users.json!");
@@ -48,7 +48,7 @@ router.post('/login', (req, res) => {
 
         // ... (โค้ดส่วนออก JWT token เหมือนเดิม) ...
         const token = jwt.sign(
-            { email: user.username, firstName: user.first_name },
+            { email: user.email, firstName: user.username },
             process.env.JWT_SECRET || 'super_secure_random_string',
             { expiresIn: '1h' }
         );
@@ -57,8 +57,8 @@ router.post('/login', (req, res) => {
             message: 'Authentication successful',
             token: token,
             user: {
-                firstName: user.first_name,
-                email: user.username
+                firstName: user.username,
+                email: user.email
             }
         });
 
