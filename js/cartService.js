@@ -141,5 +141,145 @@ function flyToCart(sourceImg, targetEl) {
     }, 1000);
 }
 
+// js/cartService.js
+class CartManager {
+    constructor() {
+        this.storageKey = 'shoppingCart';
+        this.cartItems = this.getCartData();
+        this.productsCache = null; // ตัวแปรสำหรับเก็บ Cache ข้อมูลสินค้า
+    }
+
+    getCartData() {
+        const data = localStorage.getItem(this.storageKey);
+        return data ? JSON.parse(data) : [];
+    }
+
+    saveCartData() {
+        localStorage.setItem(this.storageKey, JSON.stringify(this.cartItems));
+        this.renderCart(); 
+    }
+
+    updateQuantity(productId, change) {
+        const item = this.cartItems.find(i => String(i.id) === String(productId));
+        if (item) {
+            item.quantity += change;
+            if (item.quantity <= 0) {
+                this.removeItem(productId);
+            } else {
+                this.saveCartData();
+            }
+        }
+    }
+
+    removeItem(productId) {
+        this.cartItems = this.cartItems.filter(i => String(i.id) !== String(productId));
+        this.saveCartData();
+    }
+
+    // ฟังก์ชันใหม่สำหรับ Fetch API พร้อมระบบ Cache
+    async fetchProducts() {
+        // หากเคยดึงข้อมูลมาแล้ว ให้ใช้ข้อมูลจาก Cache ในหน่วยความจำได้เลย ไม่ต้องยิง API ซ้ำ
+        if (this.productsCache) return this.productsCache;
+
+        try {
+            // ดึงข้อมูลจาก Backend API ของคุณ
+            const response = await fetch('/api/products');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            // เก็บข้อมูลไว้ใน Cache
+            this.productsCache = data; 
+            return this.productsCache;
+
+        } catch (error) {
+            console.error('Failed to fetch products from API:', error);
+            return null; // คืนค่า null เพื่อจัดการ Error ในขั้นตอนถัดไป
+        }
+    }
+
+    async renderCart() {
+        const cartContainer = document.getElementById('cart-items-container');
+        const totalDisplay = document.getElementById('cart-total-price');
+        
+        if (!cartContainer) return;
+
+        // 1. แสดง Loading State ระหว่างรอ API
+        if (this.cartItems.length > 0 && !this.productsCache) {
+            cartContainer.innerHTML = '<tr><td colspan="6" class="text-center">Loading cart items...</td></tr>';
+        }
+
+        // 2. ตรวจสอบว่าตะกร้าว่างหรือไม่
+        if (this.cartItems.length === 0) {
+            cartContainer.innerHTML = '<tr><td colspan="6" class="text-center">Your cart is empty</td></tr>';
+            if (totalDisplay) totalDisplay.innerText = '$0.00';
+            return;
+        }
+
+        // 3. ดึงข้อมูลจาก API (หรือ Cache)
+        const allProducts = await this.fetchProducts();
+
+        // 4. จัดการ Error กรณี Backend ล่มหรือ API ไม่ตอบสนอง
+        if (!allProducts) {
+            cartContainer.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Unable to load products. Please try again later.</td></tr>';
+            return;
+        }
+
+        cartContainer.innerHTML = ''; 
+        let grandTotal = 0;
+
+        // 5. นำ ID ในตะกร้า มาแมปกับข้อมูล Master จาก API
+        this.cartItems.forEach(cartItem => {
+            // Note: หาก Backend ใช้ MongoDB ฟิลด์ ID มักจะเป็น '_id' สามารถเปลี่ยนเป็น p._id ได้
+            const productDef = allProducts.find(p => String(p.id || p._id) === String(cartItem.id));
+
+            if (productDef) {
+                const price = parseFloat(productDef.price) || 0;
+                const itemTotal = price * cartItem.quantity;
+                grandTotal += itemTotal;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><img src="${productDef.image || 'img/default.png'}" alt="${productDef.name}" width="50" style="object-fit: cover;"></td>
+                    <td>${productDef.name}</td>
+                    <td>$${price.toFixed(2)}</td>
+                    <td>
+                        <div class="quantity-controls">
+                            <button class="btn-qty-minus" data-id="${cartItem.id}">-</button>
+                            <span class="qty-display" style="margin: 0 10px;">${cartItem.quantity}</span>
+                            <button class="btn-qty-plus" data-id="${cartItem.id}">+</button>
+                        </div>
+                    </td>
+                    <td>$${itemTotal.toFixed(2)}</td>
+                    <td><button class="btn-remove" data-id="${cartItem.id}">Remove</button></td>
+                `;
+                cartContainer.appendChild(row);
+            }
+        });
+
+        if (totalDisplay) {
+            totalDisplay.innerText = `$${grandTotal.toFixed(2)}`;
+        }
+
+        this.attachEventListeners();
+    }
+
+    attachEventListeners() {
+        document.querySelectorAll('.btn-qty-plus').forEach(btn => {
+            btn.addEventListener('click', (e) => this.updateQuantity(e.target.dataset.id, 1));
+        });
+
+        document.querySelectorAll('.btn-qty-minus').forEach(btn => {
+            btn.addEventListener('click', (e) => this.updateQuantity(e.target.dataset.id, -1));
+        });
+
+        document.querySelectorAll('.btn-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => this.removeItem(e.target.dataset.id));
+        });
+    }
+}
+
 // สั่งให้ระบบตะกร้าทำงานเมื่อโหลด DOM เสร็จ
 document.addEventListener('DOMContentLoaded', initCartService);

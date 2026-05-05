@@ -17,10 +17,12 @@ app.use(bodyParser.json());
 // Import Routes
 const authRoutes = require('./src/routes/auth');
 const productRoutes = require('./src/routes/products'); // ถ้ามี
+const checkoutRoutes = require('./src/routes/checkout');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/checkout', checkoutRoutes);
 
 // Start Server
 app.listen(PORT, () => {
