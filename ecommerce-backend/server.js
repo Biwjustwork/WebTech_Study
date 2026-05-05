@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors()); // อนุญาตให้ Frontend ยิง Request เข้ามาได้
 app.use(bodyParser.json());
 
-const { registerUser } = require('./register'); // Import the controller
+
 // Import Routes
 const authRoutes = require('./src/routes/auth');
 const productRoutes = require('./src/routes/products'); // ถ้ามี

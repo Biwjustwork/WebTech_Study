@@ -1,7 +1,7 @@
 [
   {
     "email": "alice.w@example.com",
-    "password_hash": "dac7accc1bdf78b0b3937bf67b1be2c2", 
+    "password_hash": "dac7accc1bdf78b0b3937bf67b1be2c2",
     "username": "Alice",
     "registration_date": "2024-01-15T08:22:10Z"
   },
