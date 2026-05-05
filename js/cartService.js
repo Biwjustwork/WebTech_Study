@@ -142,144 +142,152 @@ function flyToCart(sourceImg, targetEl) {
 }
 
 // js/cartService.js
-class CartManager {
-    constructor() {
-        this.storageKey = 'shoppingCart';
-        this.cartItems = this.getCartData();
-        this.productsCache = null; // ตัวแปรสำหรับเก็บ Cache ข้อมูลสินค้า
-    }
-
-    getCartData() {
-        const data = localStorage.getItem(this.storageKey);
-        return data ? JSON.parse(data) : [];
-    }
-
-    saveCartData() {
-        localStorage.setItem(this.storageKey, JSON.stringify(this.cartItems));
-        this.renderCart(); 
-    }
-
-    updateQuantity(productId, change) {
-        const item = this.cartItems.find(i => String(i.id) === String(productId));
-        if (item) {
-            item.quantity += change;
-            if (item.quantity <= 0) {
-                this.removeItem(productId);
-            } else {
-                this.saveCartData();
-            }
-        }
-    }
-
-    removeItem(productId) {
-        this.cartItems = this.cartItems.filter(i => String(i.id) !== String(productId));
-        this.saveCartData();
-    }
-
-    // ฟังก์ชันใหม่สำหรับ Fetch API พร้อมระบบ Cache
-    async fetchProducts() {
-        // หากเคยดึงข้อมูลมาแล้ว ให้ใช้ข้อมูลจาก Cache ในหน่วยความจำได้เลย ไม่ต้องยิง API ซ้ำ
-        if (this.productsCache) return this.productsCache;
-
-        try {
-            // ดึงข้อมูลจาก Backend API ของคุณ
-            const response = await fetch('/api/products');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            // เก็บข้อมูลไว้ใน Cache
-            this.productsCache = data; 
-            return this.productsCache;
-
-        } catch (error) {
-            console.error('Failed to fetch products from API:', error);
-            return null; // คืนค่า null เพื่อจัดการ Error ในขั้นตอนถัดไป
-        }
-    }
-
-    async renderCart() {
-        const cartContainer = document.getElementById('cart-items-container');
-        const totalDisplay = document.getElementById('cart-total-price');
-        
-        if (!cartContainer) return;
-
-        // 1. แสดง Loading State ระหว่างรอ API
-        if (this.cartItems.length > 0 && !this.productsCache) {
-            cartContainer.innerHTML = '<tr><td colspan="6" class="text-center">Loading cart items...</td></tr>';
-        }
-
-        // 2. ตรวจสอบว่าตะกร้าว่างหรือไม่
-        if (this.cartItems.length === 0) {
-            cartContainer.innerHTML = '<tr><td colspan="6" class="text-center">Your cart is empty</td></tr>';
-            if (totalDisplay) totalDisplay.innerText = '$0.00';
-            return;
-        }
-
-        // 3. ดึงข้อมูลจาก API (หรือ Cache)
-        const allProducts = await this.fetchProducts();
-
-        // 4. จัดการ Error กรณี Backend ล่มหรือ API ไม่ตอบสนอง
-        if (!allProducts) {
-            cartContainer.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Unable to load products. Please try again later.</td></tr>';
-            return;
-        }
-
-        cartContainer.innerHTML = ''; 
-        let grandTotal = 0;
-
-        // 5. นำ ID ในตะกร้า มาแมปกับข้อมูล Master จาก API
-        this.cartItems.forEach(cartItem => {
-            // Note: หาก Backend ใช้ MongoDB ฟิลด์ ID มักจะเป็น '_id' สามารถเปลี่ยนเป็น p._id ได้
-            const productDef = allProducts.find(p => String(p.id || p._id) === String(cartItem.id));
-
-            if (productDef) {
-                const price = parseFloat(productDef.price) || 0;
-                const itemTotal = price * cartItem.quantity;
-                grandTotal += itemTotal;
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><img src="${productDef.image || 'img/default.png'}" alt="${productDef.name}" width="50" style="object-fit: cover;"></td>
-                    <td>${productDef.name}</td>
-                    <td>$${price.toFixed(2)}</td>
-                    <td>
-                        <div class="quantity-controls">
-                            <button class="btn-qty-minus" data-id="${cartItem.id}">-</button>
-                            <span class="qty-display" style="margin: 0 10px;">${cartItem.quantity}</span>
-                            <button class="btn-qty-plus" data-id="${cartItem.id}">+</button>
-                        </div>
-                    </td>
-                    <td>$${itemTotal.toFixed(2)}</td>
-                    <td><button class="btn-remove" data-id="${cartItem.id}">Remove</button></td>
-                `;
-                cartContainer.appendChild(row);
-            }
-        });
-
-        if (totalDisplay) {
-            totalDisplay.innerText = `$${grandTotal.toFixed(2)}`;
-        }
-
-        this.attachEventListeners();
-    }
-
-    attachEventListeners() {
-        document.querySelectorAll('.btn-qty-plus').forEach(btn => {
-            btn.addEventListener('click', (e) => this.updateQuantity(e.target.dataset.id, 1));
-        });
-
-        document.querySelectorAll('.btn-qty-minus').forEach(btn => {
-            btn.addEventListener('click', (e) => this.updateQuantity(e.target.dataset.id, -1));
-        });
-
-        document.querySelectorAll('.btn-remove').forEach(btn => {
-            btn.addEventListener('click', (e) => this.removeItem(e.target.dataset.id));
-        });
+// ฟังก์ชันสำหรับอัปเดตตัวเลขตะกร้าด้านบน (Cart Badge)
+function updateCartBadge() {
+    const storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+    // รวมจำนวนสินค้าทั้งหมดในตะกร้า
+    const totalItems = storedCart.reduce((sum, item) => sum + Number(item.quantity), 0);
+    
+    // อัปเดต UI (สมมติว่าไอคอนตะกร้ามี id="cart-badge")
+    const badgeElement = document.querySelector('#cart-badge');
+    if (badgeElement) {
+        badgeElement.textContent = totalItems;
     }
 }
+
+// 1. ฟังก์ชัน Render ตะกร้า
+async function renderCartItems() {
+    const cartTableBody = document.querySelector('#cart-tbody');
+    if (!cartTableBody) return;
+
+    try {
+        const storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+
+        if (storedCart.length === 0) {
+            cartTableBody.innerHTML = `<tr><td colspan="6" class="text-center">ตะกร้าสินค้าว่างเปล่า</td></tr>`;
+            document.querySelector('#cart-total-price').textContent = '$0.00';
+            return;
+        }
+
+        // Fetch Data (ตรวจสอบให้แน่ใจว่า path ตรงกับไฟล์ JSON หรือ API ของคุณ)
+        const response = await fetch('ecommerce-backend/data/products.json'); 
+        const productsCatalog = await response.json();
+
+        let cartHTML = '';
+        let cartTotal = 0;
+
+        storedCart.forEach(cartItem => {
+            const product = productsCatalog.find(p => String(p.id) === String(cartItem.id));
+
+            if (product) {
+                const itemTotalPrice = product.price * cartItem.quantity;
+                cartTotal += itemTotalPrice;
+
+                // แก้ปัญหา 404 Image: ใช้ Fallback image ถ้ารูปไม่มี
+                const imageUrl = product.image_url ? product.image_url : '/img/placeholder.jpg';
+
+                cartHTML += `
+                    <tr data-id="${cartItem.id}">
+                        <td><img src="${imageUrl}" alt="${product.name || 'Product'}" width="70" class="img-fluid rounded"></td>
+                        <td>${product.name || 'Unknown Item'}</td>
+                        <td>$${product.price.toFixed(2)}</td>
+                        <td>
+                            <input type="number" class="form-control quantity-input" 
+                                   value="${cartItem.quantity}" min="1"
+                                   onchange="updateQuantity('${cartItem.id}', this.value)">
+                        </td>
+                        <td>$${itemTotalPrice.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart('${cartItem.id}')">
+                                ลบ
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        cartTableBody.innerHTML = cartHTML;
+        
+        const totalElement = document.querySelector('#cart-total-price');
+        if (totalElement) totalElement.textContent = `$${cartTotal.toFixed(2)}`;
+
+    } catch (error) {
+        console.error("Error rendering cart:", error);
+    }
+}
+
+// 2. ฟังก์ชันอัปเดตจำนวนสินค้า (แนบเข้ากับ Global Scope เพื่อให้ HTML มองเห็น)
+window.updateQuantity = function(productId, newQuantity) {
+    let storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+    const quantity = parseInt(newQuantity, 10);
+
+    if (quantity <= 0) return; // ป้องกันการใส่ค่าติดลบหรือ 0
+
+    // อัปเดตจำนวนใน Array
+    storedCart = storedCart.map(item => {
+        if (String(item.id) === String(productId)) {
+            return { ...item, quantity: quantity };
+        }
+        return item;
+    });
+
+    // บันทึกกลับลง Local Storage
+    localStorage.setItem('shoppingCart', JSON.stringify(storedCart));
+
+    // วาดหน้าจอใหม่ และอัปเดต Badge
+    renderCartItems();
+    updateCartBadge();
+};
+
+// 3. ฟังก์ชันลบสินค้า (แนบเข้ากับ Global Scope)
+window.removeFromCart = function(productId) {
+    let storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+
+    // กรองไอเทมที่ต้องการลบออก
+    storedCart = storedCart.filter(item => String(item.id) !== String(productId));
+
+    // บันทึกกลับลง Local Storage
+    localStorage.setItem('shoppingCart', JSON.stringify(storedCart));
+
+    // วาดหน้าจอใหม่ และอัปเดต Badge
+    renderCartItems();
+    updateCartBadge();
+};
+
+// รันฟังก์ชันเริ่มต้นเมื่อ DOM โหลดเสร็จ
+document.addEventListener('DOMContentLoaded', () => {
+    renderCartItems();
+    updateCartBadge();
+});
+
+// ฟังก์ชันสำหรับปุ่ม Proceed Checkout
+window.proceedToCheckout = function() {
+    // 1. ตรวจสอบสถานะ Authentication 
+    // (สมมติว่าคุณเก็บ JWT Token หรือข้อมูล User ไว้ใน localStorage เมื่อ Login สำเร็จ)
+    const authToken = localStorage.getItem('authToken'); 
+
+    // 2. ตรวจสอบว่าตะกร้าว่างหรือไม่ก่อนไปหน้า Checkout
+    const storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+    if (storedCart.length === 0) {
+        alert("ตะกร้าสินค้าของคุณว่างเปล่า กรุณาเพิ่มสินค้าก่อนดำเนินการต่อ");
+        return;
+    }
+
+    if (!authToken) {
+        alert("คุณยังไม่ได้เข้าสู่ระบบ กรุณาเข้าสู่ระบบก่อนดำเนินการต่อ");
+        // หากไม่มี Token หมายความว่ายังไม่ได้ Login
+        // ให้ดึง Path ปัจจุบัน (เช่น /cart.html) และเข้ารหัสด้วย encodeURIComponent ป้องกัน URL ผิดรูปแบบ
+        const currentPath = encodeURIComponent(window.location.pathname);
+        
+        // พาผู้ใช้ไปหน้า Login พร้อมแนบ Parameter 'redirect'
+        window.location.href = `/login.html?redirect=${currentPath}`;
+        return;
+    }
+
+    // หากมี Token (Login แล้ว) และมีสินค้า ให้ไปที่หน้า Checkout ได้เลย
+    window.location.href = '/checkout.html';
+};
 
 // สั่งให้ระบบตะกร้าทำงานเมื่อโหลด DOM เสร็จ
 document.addEventListener('DOMContentLoaded', initCartService);

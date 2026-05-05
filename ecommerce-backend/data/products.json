@@ -7,7 +7,7 @@
     "description": "Sweet and juicy green grapes, perfect for a healthy snack.",
     "price": 4.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 2,
@@ -17,7 +17,7 @@
     "description": "Crisp, sweet organic apples sourced from local orchards.",
     "price": 3.49,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 3,
@@ -27,7 +27,7 @@
     "description": "Rich in potassium and perfect for your morning smoothies.",
     "price": 1.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 4,
@@ -37,7 +37,7 @@
     "description": "Vitamin C packed citrus, great for juicing or snacking.",
     "price": 4.29,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 5,
@@ -47,7 +47,7 @@
     "description": "Freshly picked red strawberries with a natural sweet flavor.",
     "price": 5.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 6,
@@ -57,7 +57,7 @@
     "description": "Refreshing and hydrating, a summer favorite.",
     "price": 2.50,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 7,
@@ -67,7 +67,7 @@
     "description": "Crunchy root vegetables, excellent for salads and roasting.",
     "price": 1.49,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 8,
@@ -77,7 +77,7 @@
     "description": "Nutrient-dense green broccoli, perfect for steaming.",
     "price": 2.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 9,
@@ -87,7 +87,7 @@
     "description": "Firm and flavorful tomatoes, ideal for sauces and slicing.",
     "price": 3.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 10,
@@ -97,7 +97,7 @@
     "description": "Sweet and crisp peppers, packed with antioxidants.",
     "price": 4.50,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 11,
@@ -107,7 +107,7 @@
     "description": "Versatile starchy potatoes, great for baking or mashing.",
     "price": 1.20,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 12,
@@ -117,7 +117,7 @@
     "description": "Tender green leaves, excellent for fresh salads.",
     "price": 6.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 13,
@@ -127,7 +127,7 @@
     "description": "Tropical, sweet, and juicy mangoes.",
     "price": 3.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 14,
@@ -137,7 +137,7 @@
     "description": "Tangy and sweet tropical fruit, pre-cut for convenience.",
     "price": 4.99,
     "unit": "each",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 15,
@@ -147,7 +147,7 @@
     "description": "Antioxidant-rich berries, perfect for baking or snacking.",
     "price": 8.99,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 16,
@@ -157,7 +157,7 @@
     "description": "A staple for cooking, offering a robust flavor base.",
     "price": 1.10,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 17,
@@ -167,7 +167,7 @@
     "description": "Aromatic garlic to enhance the flavor of any savory dish.",
     "price": 5.50,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 18,
@@ -177,7 +177,7 @@
     "description": "Crisp and refreshing, ideal for salads and pickling.",
     "price": 2.20,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 19,
@@ -187,7 +187,7 @@
     "description": "Soft, sweet, and juicy peaches perfect for desserts.",
     "price": 4.80,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   },
   {
     "id": 20,
@@ -197,6 +197,6 @@
     "description": "Creamy and rich in healthy fats, great for toast and guacamole.",
     "price": 6.00,
     "unit": "kg",
-    "stock": 100
+    "quantity": 100
   }
 ]
