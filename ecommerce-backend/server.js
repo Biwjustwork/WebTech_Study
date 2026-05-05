@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors()); // อนุญาตให้ Frontend ยิง Request เข้ามาได้
 app.use(bodyParser.json());
 
+const { registerUser } = require('./register'); // Import the controller
 // Import Routes
 const authRoutes = require('./src/routes/auth');
 const productRoutes = require('./src/routes/products'); // ถ้ามี
@@ -26,5 +27,5 @@ app.use('/api/checkout', checkoutRoutes);
 
 // Start Server
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`E-commerce API is up and running on port ${PORT}`);
 });
