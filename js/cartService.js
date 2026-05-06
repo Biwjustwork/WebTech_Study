@@ -2,32 +2,23 @@
 
 /**
  * ฟังก์ชันหลักในการจัดการตะกร้า (ครอบคลุมขั้นตอนที่ 2 ถึง 6)
- * @param {integer} id - รหัสสินค้าที่ส่งเข้ามา
+ * @param {String} id - รหัสสินค้าที่ส่งเข้ามา
  */
 function handleAddToCart(id) {
-    // ขั้นตอนที่ 2: โหลด cart array ใน local storage 
-    // ใช้ JSON.parse เพื่อแปลง String กลับเป็น Array (ถ้าไม่มีข้อมูลให้คืนค่าเป็น Array ว่าง [])
     let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
 
-    // ขั้นตอนที่ 3: เช็ก ID product นั้นว่าเคยอยู่ใน cart array ไหม
-    // เราใช้ .findIndex() เพื่อหาว่าสินค้านั้นอยู่ตำแหน่ง (index) ไหนใน Array
-    const existingProductIndex = cart.findIndex(item => item.id === id);
+    // เปลี่ยนจาก item.id เป็น item.productId[cite: 18]
+    const existingProductIndex = cart.findIndex(item => item.productId === id); 
 
     if (existingProductIndex !== -1) {
-        // ขั้นตอนที่ 4.1: ถ้ามีอยู่แล้วให้เพิ่ม quantity +1
         cart[existingProductIndex].quantity += 1;
     } else {
-        // ขั้นตอนที่ 4.2: ถ้าไม่มี ให้เพิ่ม product นั้นลงใน cart array โดยมี quantity = 1
-        cart.push({ id: id, quantity: 1 });
+        // เปลี่ยนจาก { id: id, ... } เป็น { productId: id, ... }[cite: 18]
+        cart.push({ productId: id, quantity: 1 }); 
     }
 
-    // ขั้นตอนที่ 5: ทำการ save cart array ใน local storage
-    // ต้องแปลง Array กลับเป็น String ด้วย JSON.stringify ก่อนบันทึก
     localStorage.setItem('shoppingCart', JSON.stringify(cart));
-
-    // ขั้นตอนที่ 6: update cart array (อัปเดต UI หรือ State อื่นๆ)
     updateCartUI(cart);
-    
     console.log("Cart Updated in LocalStorage:", cart);
 }
 
@@ -163,42 +154,46 @@ async function renderCartItems() {
     try {
         const storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
 
+        // 🟢 นำโค้ดส่วนนี้กลับมา: จัดการ Empty State
         if (storedCart.length === 0) {
             cartTableBody.innerHTML = `<tr><td colspan="6" class="text-center">ตะกร้าสินค้าว่างเปล่า</td></tr>`;
-            document.querySelector('#cart-total-price').textContent = '$0.00';
-            return;
+            const totalElement = document.querySelector('#cart-total-price');
+            if (totalElement) totalElement.textContent = '$0.00';
+            return; // หยุดการทำงานของฟังก์ชันทันที ไม่ต้องไปโหลดสินค้า
         }
 
-        // Fetch Data (ตรวจสอบให้แน่ใจว่า path ตรงกับไฟล์ JSON หรือ API ของคุณ)
-        const response = await fetch('ecommerce-backend/data/products.json'); 
+        // --- จุดที่ 2: ต้องแก้ Path ให้ไปดึง API แทนที่จะอ่าน JSON ตรงๆ ---
+        // เปลี่ยนจากการอ่านไฟล์ products.json มาเป็นการยิง API ที่เชื่อมต่อกับ SQLite แล้ว
+        const response = await fetch('http://localhost:5000/api/products'); 
+        if (!response.ok) throw new Error('Failed to fetch products');
+        
         const productsCatalog = await response.json();
 
         let cartHTML = '';
         let cartTotal = 0;
 
         storedCart.forEach(cartItem => {
-            const product = productsCatalog.find(p => String(p.id) === String(cartItem.id));
+            // ใน API เราน่าจะตั้งชื่อเป็น productId แทน id แล้ว (ตามโครงสร้าง DB)
+            const product = productsCatalog.find(p => String(p.productId) === String(cartItem.productId)); 
 
             if (product) {
                 const itemTotalPrice = product.price * cartItem.quantity;
                 cartTotal += itemTotalPrice;
-
-                // แก้ปัญหา 404 Image: ใช้ Fallback image ถ้ารูปไม่มี
                 const imageUrl = product.image_url ? product.image_url : '/img/placeholder.jpg';
 
                 cartHTML += `
-                    <tr data-id="${cartItem.id}">
+                    <tr data-id="${cartItem.productId}">
                         <td><img src="${imageUrl}" alt="${product.name || 'Product'}" width="70" class="img-fluid rounded"></td>
                         <td>${product.name || 'Unknown Item'}</td>
                         <td>$${product.price.toFixed(2)}</td>
                         <td>
                             <input type="number" class="form-control quantity-input" 
                                    value="${cartItem.quantity}" min="1"
-                                   onchange="updateQuantity('${cartItem.id}', this.value)">
+                                   onchange="updateQuantity('${cartItem.productId}', this.value)">
                         </td>
                         <td>$${itemTotalPrice.toFixed(2)}</td>
                         <td>
-                            <button class="btn btn-sm btn-danger" onclick="removeFromCart('${cartItem.id}')">
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart('${cartItem.productId}')">
                                 ลบ
                             </button>
                         </td>
@@ -222,20 +217,17 @@ window.updateQuantity = function(productId, newQuantity) {
     let storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
     const quantity = parseInt(newQuantity, 10);
 
-    if (quantity <= 0) return; // ป้องกันการใส่ค่าติดลบหรือ 0
+    if (quantity <= 0) return; 
 
-    // อัปเดตจำนวนใน Array
     storedCart = storedCart.map(item => {
-        if (String(item.id) === String(productId)) {
+        // เปลี่ยนจาก item.id เป็น item.productId[cite: 18]
+        if (String(item.productId) === String(productId)) { 
             return { ...item, quantity: quantity };
         }
         return item;
     });
 
-    // บันทึกกลับลง Local Storage
     localStorage.setItem('shoppingCart', JSON.stringify(storedCart));
-
-    // วาดหน้าจอใหม่ และอัปเดต Badge
     renderCartItems();
     updateCartBadge();
 };
@@ -245,7 +237,7 @@ window.removeFromCart = function(productId) {
     let storedCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
 
     // กรองไอเทมที่ต้องการลบออก
-    storedCart = storedCart.filter(item => String(item.id) !== String(productId));
+    storedCart = storedCart.filter(item => String(item.productId) !== String(productId));
 
     // บันทึกกลับลง Local Storage
     localStorage.setItem('shoppingCart', JSON.stringify(storedCart));

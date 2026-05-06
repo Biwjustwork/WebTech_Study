@@ -1,73 +1,98 @@
-const fs = require('fs');
+const sqlite3 = require('sqlite3').verbose();
+const { open } = require('sqlite');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 
-// กำหนด Path ไปยังไฟล์ JSON ในโฟลเดอร์ data
-const productsFilePath = path.join(__dirname, '../../data/products.json');
-const ordersFilePath = path.join(__dirname, '../../data/orders.json');
-
-// ฟังก์ชันช่วยอ่านไฟล์ JSON
-const readJsonFile = (filePath) => {
-    if (!fs.existsSync(filePath)) return [];
-    const data = fs.readFileSync(filePath, 'utf8');
-    return data ? JSON.parse(data) : [];
+// Helper function สำหรับเปิด Database
+const getDbConnection = async () => {
+    return open({
+        filename: path.join(__dirname, '../../store.db'),
+        driver: sqlite3.Database
+    });
 };
 
-exports.processCheckout = (req, res) => {
+exports.processCheckout = async (req, res) => {
+    let db;
     try {
+        // 1. Authentication & Security Check
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
+        }
+
+        const token = authHeader.split(' ')[1];
+        let decodedToken;
+        try {
+            decodedToken = jwt.verify(token, process.env.JWT_SECRET || 'super_secure_random_string');
+        } catch (err) {
+            return res.status(401).json({ error: "Unauthorized: Token expired or invalid" });
+        }
+
         const { customer, cartItems } = req.body;
 
-        // ขั้นตอนที่ 1: Server-Side Validation
-        // ใช้ Regular Expressions เป็น Firewall ฝั่งเซิร์ฟเวอร์เพื่อตรวจสอบอีเมล
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!customer || !emailRegex.test(customer.email)) {
-            return res.status(400).json({ error: "รูปแบบอีเมลไม่ถูกต้อง" });
+        // 2. ตรวจสอบว่า Email ในฟอร์ม ตรงกับ Email ของ Account ที่ Login อยู่หรือไม่
+        if (customer.email !== decodedToken.email) {
+            return res.status(403).json({ error: "Forbidden: อีเมลไม่ตรงกับบัญชีที่เข้าสู่ระบบ" });
         }
 
         if (!cartItems || cartItems.length === 0) {
             return res.status(400).json({ error: "ไม่มีสินค้าในตะกร้า" });
         }
 
-        // โหลดข้อมูลสินค้าจริงจาก Database เพื่อความปลอดภัย
-        const productsDB = readJsonFile(productsFilePath);
-        let totalAmount = 0;
+        db = await getDbConnection();
 
-        // ขั้นตอนที่ 2: Inventory Check & Calculations[cite: 2]
-        // ต้องคำนวณราคาใหม่และตรวจสอบสต็อกที่ฝั่ง Server เสมอ[cite: 2]
+        // 3. เริ่ม Transaction (ถ้ามีอะไรพัง ข้อมูลจะไม่ถูกบันทึกเลย)
+        await db.exec('BEGIN TRANSACTION;');
+
+        let totalAmount = 0;
+        const orderId = "ORD" + Date.now(); // สร้าง Order ID แบบง่ายๆ
+
+        // 4. Inventory Check & Calculations
         for (let item of cartItems) {
-            const product = productsDB.find(p => String(p.id) === String(item.id));
+            // ดึงข้อมูลสินค้าจาก DB
+            const product = await db.get('SELECT * FROM PRODUCTS WHERE productId = ?', [item.productId]);
             
             if (!product) {
-                throw new Error(`ไม่พบสินค้า ID: ${item.id}`);
+                throw new Error(`ไม่พบสินค้า ID: ${item.productId}`);
             }
             
-            // ตรวจสอบว่าสินค้ามีเพียงพอต่อการสั่งซื้อหรือไม่
-            if (product.stock !== undefined && product.stock < item.quantity) {
+            // ตรวจสอบสต็อก
+            if (product.quantity_in_stock < item.quantity) {
                 throw new Error(`สินค้า ${product.name} มีสต็อกไม่เพียงพอ`);
             }
 
+            // คำนวณยอดรวมที่หลังบ้าน
             totalAmount += (product.price * item.quantity);
+
+            // ตัดสต็อกสินค้าในตาราง PRODUCTS
+            await db.run(
+                'UPDATE PRODUCTS SET quantity_in_stock = quantity_in_stock - ? WHERE productId = ?',
+                [item.quantity, item.productId]
+            );
+
+            // บันทึกลงตาราง ORDER_ITEMS
+            await db.run(
+                'INSERT INTO ORDER_ITEMS (orderId, productId, quantity) VALUES (?, ?, ?)',
+                [orderId, item.productId, item.quantity]
+            );
         }
 
-        // ขั้นตอนที่ 3: Persistence[cite: 2]
-        // บันทึกออเดอร์ลง "Orders" Database[cite: 2]
-        const ordersDB = readJsonFile(ordersFilePath);
-        const newOrder = {
-            orderId: "ORD" + Date.now(),
-            customer: customer,
-            items: cartItems,
-            totalAmount: totalAmount,
-            createdAt: new Date().toISOString()
-        };
+        // 5. บันทึกคำสั่งซื้อลงตาราง ORDERS
+        await db.run(
+            'INSERT INTO ORDERS (orderId, userId, totalAmount, createdAt) VALUES (?, ?, ?, ?)',
+            [orderId, decodedToken.userId, totalAmount, new Date().toISOString()]
+        );
 
-        ordersDB.push(newOrder);
-        // ทำการเขียนข้อมูลทับลงไปในไฟล์ orders.json
-        fs.writeFileSync(ordersFilePath, JSON.stringify(ordersDB, null, 2));
-
-        // คืนค่า Response เมื่อทำงานสำเร็จครบทุกขั้นตอน
-        res.status(200).json({ message: "สั่งซื้อสำเร็จ", orderId: newOrder.orderId });
+        // 6. Commit Transaction ยืนยันการบันทึกข้อมูล
+        await db.exec('COMMIT;');
+        res.status(200).json({ message: "สั่งซื้อสำเร็จ", orderId: orderId });
 
     } catch (error) {
-        // หากขั้นตอนใดล้มเหลว ระบบจะมาที่จุดนี้ และไม่มีการบันทึกออเดอร์ (All-or-Nothing)[cite: 2]
+        // หากล้มเหลว ทำการ Rollback ข้อมูลทั้งหมด (All-or-Nothing)
+        if (db) await db.exec('ROLLBACK;');
+        console.error("Checkout Error:", error);
         res.status(400).json({ error: error.message || "การสั่งซื้อล้มเหลว" });
+    } finally {
+        if (db) await db.close();
     }
 };

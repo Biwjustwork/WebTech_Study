@@ -28,7 +28,7 @@
     "registration_date": "2024-03-05T11:30:21Z"
   },
   {
-      "id": "5",
+    "id": "5",
     "email": "ethan.h@example.com",
     "password_hash": "73e3b790c0e51966df8284856ff6c43b",
     "username": "Ethan",
@@ -68,5 +68,11 @@
     "password_hash": "8f8f989c526661db4cb31befaaa6df71",
     "username": "Julia",
     "registration_date": "2024-05-20T21:40:50Z"
+  },
+  {
+    "email": "biw@gmail.com",
+    "username": "biw",
+    "password_hash": "$2b$10$aB2UW80wOhkb/1.EIKHVfeVteRocJz/nUQlq2l4FcQIWT0BSd0x3a",
+    "registration_date": "2026-05-06T13:54:46.879Z"
   }
 ]

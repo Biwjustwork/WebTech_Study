@@ -1,15 +1,23 @@
-const fs = require('fs').promises;
-const path = require('path');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken'); //
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const sqlite3 = require('sqlite3').verbose();
+const { open } = require('sqlite');
+const path = require('path');
 
-// กำหนด Path ไปยังไฟล์ users.json[cite: 5]
-const usersFilePath = path.join(__dirname, '../../data/users.json');
+// ฟังก์ชันเปิดการเชื่อมต่อฐานข้อมูล
+const getDbConnection = async () => {
+    return open({
+        filename: path.join(__dirname, '../../store.db'),
+        driver: sqlite3.Database
+    });
+};
 
 // ==========================================
 // Controller: สำหรับการลงทะเบียน (Register)
 // ==========================================
 exports.registerUser = async (req, res) => {
+    let db;
     try {
         const { name, email, password } = req.body;
 
@@ -17,38 +25,34 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ error: 'Name, email, and password are required.' });
         }
 
-        // อ่านข้อมูล users.json
-        let users = [];
-        try {
-            const fileData = await fs.readFile(usersFilePath, 'utf8');
-            if (fileData.trim()) users = JSON.parse(fileData);
-        } catch (err) {
-            if (err.code !== 'ENOENT') throw err;
+        db = await getDbConnection();
+
+        // ตรวจสอบอีเมลซ้ำใน SQLite
+        const existingUser = await db.get('SELECT email FROM USERS WHERE email = ?', [email]);
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email already taken' });
         }
 
-        // ตรวจสอบว่ามีอีเมลนี้ในระบบหรือยัง
-        if (users.some(user => user.email === email)) {
-            return res.status(409).json({ error: 'Username already taken' });
-        }
-
-        // แฮชรหัสผ่านด้วย bcrypt
         const password_hash = await bcrypt.hash(password, 10);
+        const userId = crypto.randomUUID(); 
+        const registration_date = new Date().toISOString();
 
-        // บันทึกผู้ใช้ใหม่
-        const newUser = {
-            email: email,
-            username: name,
-            password_hash: password_hash,
-            registration_date: new Date().toISOString()
-        };
+        // บันทึกลง SQLite
+        await db.run(
+            `INSERT INTO USERS (userId, email, username, password_hash, registration_date) VALUES (?, ?, ?, ?, ?)`,
+            [userId, email, name, password_hash, registration_date]
+        );
 
-        users.push(newUser);
-        await fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), 'utf8');
+        return res.status(201).json({ 
+            message: 'User successfully registered.', 
+            user: { id: userId, email, username: name, registration_date } 
+        });
 
-        return res.status(201).json({ message: 'User successfully registered.', user: newUser });
     } catch (error) {
         console.error('Registration Error:', error);
         return res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+        if (db) await db.close();
     }
 };
 
@@ -56,44 +60,45 @@ exports.registerUser = async (req, res) => {
 // Controller: สำหรับเข้าสู่ระบบ (Login)
 // ==========================================
 exports.loginUser = async (req, res) => {
+    let db;
     try {
-        const email = req.body.email ? req.body.email.trim() : ''; //[cite: 5]
-        const password = req.body.password || ''; //[cite: 5]
+        const email = req.body.email ? req.body.email.trim() : '';
+        const password = req.body.password || '';
 
-        if (!email || !password) { //[cite: 5]
-            return res.status(400).json({ error: 'Email and password are required.' }); //[cite: 5]
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required.' });
         }
 
-        const fileData = await fs.readFile(usersFilePath, 'utf8');
-        const users = JSON.parse(fileData); //[cite: 5]
-        const user = users.find(u => u.email === email); //[cite: 5]
+        db = await getDbConnection();
 
-        if (!user) { //[cite: 5]
-            return res.status(401).json({ error: 'Invalid email or password.' }); //[cite: 5]
-        }
-
-        // 🔒 ตรวจสอบรหัสผ่านที่แฮชด้วย bcrypt (อัปเกรดจาก MD5 เดิม)
-        const isMatch = await bcrypt.compare(password, user.password_hash);
+        // อ่านข้อมูลจาก SQLite
+        const user = await db.get('SELECT * FROM USERS WHERE email = ?', [email]);
         
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid email or password.' }); //[cite: 5]
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password.' });
         }
 
-        // สร้าง JWT Token[cite: 5]
-        const token = jwt.sign( //[cite: 5]
-            { email: user.email, firstName: user.username }, //[cite: 5]
-            process.env.JWT_SECRET || 'super_secure_random_string', //[cite: 5]
-            { expiresIn: '1h' } //[cite: 5]
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid email or password.' });
+        }
+
+        const token = jwt.sign(
+            { userId: user.userId, email: user.email, username: user.username },
+            process.env.JWT_SECRET || 'super_secure_random_string',
+            { expiresIn: '1h' }
         );
 
-        return res.status(200).json({ //[cite: 5]
-            message: 'Authentication successful', //[cite: 5]
-            token: token, //[cite: 5]
-            user: { firstName: user.username, email: user.email } //[cite: 5]
+        return res.status(200).json({
+            message: 'Authentication successful',
+            token: token,
+            user: { firstName: user.username, email: user.email }
         });
 
-    } catch (error) { //[cite: 5]
-        console.error('Login Error:', error); //[cite: 5]
-        return res.status(500).json({ error: 'Internal server error' }); //[cite: 5]
+    } catch (error) {
+        console.error('Login Error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        if (db) await db.close();
     }
 };

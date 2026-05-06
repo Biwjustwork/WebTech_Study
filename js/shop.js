@@ -134,7 +134,7 @@ async function requestProducts() {
 
 /**
  * 2. PRESENTATION LAYER: renderUI()
- * นำข้อมูล Array ไปสร้างเป็น HTML เหมือนเดิม 100%
+ * นำข้อมูล Array ไปสร้างเป็น HTML
  */
 function renderUI(products, error = null) {
     const container = document.getElementById('product-container');
@@ -149,14 +149,14 @@ function renderUI(products, error = null) {
             <div class="col-12 text-center py-5">
                 <i class="fa fa-exclamation-triangle fa-3x text-warning mb-3"></i>
                 <h5 class="text-secondary">Oops! We couldn't load the products right now.</h5>
-                <p>Please make sure your Node.js backend is running on port 3000.</p>
+                <p>Please make sure your Node.js backend is running on port 5000.</p>
             </div>
         `;
         return;
     }
 
     const productsHTML = products.map(product => `
-        <div class="col-md-6 col-lg-6 col-xl-4" key="${product.id}">
+        <div class="col-md-6 col-lg-6 col-xl-4" key="${product.productId}"> <!-- แก้ไขเป็น product.productId -->
             <div class="rounded position-relative fruite-item">
                 <div class="fruite-img">
                     <img src="${product.image_url || 'img/fruite-item-5.jpg'}" class="img-fluid w-100 rounded-top" alt="${product.name}">
@@ -167,7 +167,8 @@ function renderUI(products, error = null) {
                     <p>${product.description || 'No description available'}</p>
                     <div class="d-flex justify-content-between flex-lg-wrap">
                         <p class="text-dark fs-5 fw-bold mb-0">$${parseFloat(product.price).toFixed(2)} / ${product.unit || 'kg'}</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary add-to-cart" data-id="${product.id}">
+                        <!-- แก้ไข data-id เป็น product.productId ตรงปุ่ม Add to cart -->
+                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary add-to-cart" data-id="${product.productId}">
                             <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
                         </a>
                     </div>

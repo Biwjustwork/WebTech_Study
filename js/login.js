@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     // สำเร็จ: เก็บ Token ไว้ใน LocalStorage[cite: 4]
                     localStorage.setItem('authToken', data.token);
-                    alert(`Welcome back, ${data.user.firstName}!`);
+                    alert(`Welcome back, ${data.user.username}!`);
                     
                     // Redirect ไปยังหน้า shop[cite: 4]
                     window.location.href = 'shop.html'; 
