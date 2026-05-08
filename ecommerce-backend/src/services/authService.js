@@ -1,0 +1,30 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const userRepository = require('../repositories/userRepository');
+
+const registerUser = async (name, email, plainPassword) => {
+    // 1. Business Logic: เช็คว่ามีผู้ใช้นี้หรือยัง
+    const existingUser = await userRepository.findByEmail(email);
+    if (existingUser) throw new Error('Email is already registered');
+
+    // 2. Business Logic: Hash password
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    // 3. บันทึกลง DB ผ่าน Repository
+    const newUserId = await userRepository.create({ name, email, password: hashedPassword });
+    return newUserId;
+};
+
+const loginUser = async (email, plainPassword) => {
+    const user = await userRepository.findByEmail(email);
+    if (!user) throw new Error('Invalid email or password');
+
+    const isMatch = await bcrypt.compare(plainPassword, user.password);
+    if (!isMatch) throw new Error('Invalid email or password');
+    
+    // Business Logic: สร้าง JWT Token
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    return token;
+};
+
+module.exports = { registerUser, loginUser };
