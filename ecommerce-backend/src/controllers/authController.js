@@ -14,11 +14,22 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const token = await authService.loginUser(email, password);
+        // ✅ รับค่า user ออกมาจาก authService ด้วย
+        const { token, user } = await authService.loginUser(email, password);
         
-        res.status(200).json({ message: 'Login successful', token });
+        // ✅ แนบ user ส่งคืนไปให้หน้าเว็บ
+        res.status(200).json({ 
+            message: 'Login successful', 
+            token: token,
+            user: {
+                id: user.userId,
+                username: user.username, // 👈 แปลงจากคอลัมน์ username ใน DB ให้เป็น username ที่หน้าเว็บตามหา
+                email: user.email
+            }
+        });
     } catch (error) {
-        res.status(401).json({ error: error.message });
+        console.error("Login Error:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
 

@@ -19,11 +19,14 @@ const findByEmail = async (email) => {
 // สร้างผู้ใช้ใหม่
 const create = async (userData) => {
     const db = await getDb();
-    const result = await db.run(
-        'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-        [userData.name, userData.email, userData.password]
+    const newUserId = crypto.randomUUID(); // สร้าง ID แบบ TEXT
+    
+    await db.run(
+        'INSERT INTO USERS (userId, username, email, password_hash) VALUES (?, ?, ?, ?)',
+        [newUserId, userData.username, userData.email, userData.password_hash] // แก้ key ให้ตรง
     );
-    return result.lastID;
+    
+    return newUserId; // คืนค่า newUserId แทน result.lastID
 };
 
 module.exports = { findByEmail, create };

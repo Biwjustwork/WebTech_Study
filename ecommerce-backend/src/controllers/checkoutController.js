@@ -25,7 +25,7 @@ exports.processCheckout = async (req, res) => {
         }
 
         // 3. โยนข้อมูลไปให้ Service ทำการคำนวณและบันทึกลง Database
-        const orderId = await checkoutService.createOrder(decodedToken.userId, cartItems);
+        const orderId = await checkoutService.createOrder(decodedToken.id, cartItems);
 
         // 4. ส่งผลลัพธ์กลับไปยัง Client
         res.status(200).json({ message: "สั่งซื้อสำเร็จ", orderId: orderId });
