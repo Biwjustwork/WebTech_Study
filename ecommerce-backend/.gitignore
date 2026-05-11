@@ -2,4 +2,15 @@ node_modules/
 
 .env
 
-store.db
+data/store.db
+
+# Ignore database files in data folder
+data/*.db
+data/*.sqlite
+data/*.db-shm
+data/*.db-wal
+
+# But keep the empty data folder in Git structure
+!data/.gitkeep
+
+src/utils/logger.js

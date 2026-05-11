@@ -1,32 +1,22 @@
-const { open } = require('sqlite');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+// src/repositories/userRepository.js
+const { initDb } = require('../config/database');
+const crypto = require('crypto'); // อย่าลืม import crypto ด้วย
 
-// Helper เชื่อมต่อ DB
-async function getDb() {
-    return open({
-        filename: path.join(__dirname, '../../store.db'),
-        driver: sqlite3.Database
-    });
-}
-
-// ค้นหาผู้ใช้ด้วย Email
 const findByEmail = async (email) => {
-    const db = await getDb();
+    const db = await initDb();
     return await db.get('SELECT * FROM users WHERE email = ?', [email]);
 };
 
-// สร้างผู้ใช้ใหม่
 const create = async (userData) => {
-    const db = await getDb();
-    const newUserId = crypto.randomUUID(); // สร้าง ID แบบ TEXT
+    const db = await initDb();
+    const newUserId = crypto.randomUUID(); 
     
     await db.run(
         'INSERT INTO USERS (userId, username, email, password_hash) VALUES (?, ?, ?, ?)',
-        [newUserId, userData.username, userData.email, userData.password_hash] // แก้ key ให้ตรง
+        [newUserId, userData.username, userData.email, userData.password_hash] 
     );
     
-    return newUserId; // คืนค่า newUserId แทน result.lastID
+    return newUserId; 
 };
 
 module.exports = { findByEmail, create };
