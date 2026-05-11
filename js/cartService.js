@@ -220,7 +220,7 @@ window.updateQuantity = function(productId, newQuantity) {
     if (quantity <= 0) return; 
 
     storedCart = storedCart.map(item => {
-        // เปลี่ยนจาก item.id เป็น item.productId[cite: 18]
+        // เปลี่ยนจาก item.id เป็น item.productId
         if (String(item.productId) === String(productId)) { 
             return { ...item, quantity: quantity };
         }
