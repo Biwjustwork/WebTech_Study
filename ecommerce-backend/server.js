@@ -1,14 +1,14 @@
+require('dotenv').config(); 
 const express = require('express');
 const bodyParser = require('body-parser'); 
 const cors = require('cors'); // สำคัญมากสำหรับการเชื่อมต่อกับ Frontend แยก
-require('dotenv').config(); 
 
 const app = express();
 // อนุญาตให้ Express เสิร์ฟไฟล์ Static จากโฟลเดอร์ปัจจุบันหรือโฟลเดอร์ที่คุณเก็บไฟล์ Front-end ไว้
 // เช่น ถ้าไฟล์ css/, js/, img/ อยู่ในโฟลเดอร์ public
 //app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors()); // อนุญาตให้ Frontend ยิง Request เข้ามาได้

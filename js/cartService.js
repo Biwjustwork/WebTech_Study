@@ -164,7 +164,7 @@ async function renderCartItems() {
 
         // --- จุดที่ 2: ต้องแก้ Path ให้ไปดึง API แทนที่จะอ่าน JSON ตรงๆ ---
         // เปลี่ยนจากการอ่านไฟล์ products.json มาเป็นการยิง API ที่เชื่อมต่อกับ SQLite แล้ว
-        const response = await fetch('http://localhost:5000/api/products'); 
+        const response = await fetch('http://localhost:3000/api/products'); 
         if (!response.ok) throw new Error('Failed to fetch products');
         
         const productsCatalog = await response.json();

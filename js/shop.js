@@ -107,7 +107,7 @@ let searchTimeout = null;
  */
 async function requestProducts() {
     // กำหนด URL ไปที่ Backend API ที่สร้างด้วย Node.js/Express
-    const apiURL = 'http://localhost:5000/api/products';
+    const apiURL = 'http://localhost:3000/api/products';
     
     try {
         const response = await fetch(apiURL);
@@ -149,7 +149,7 @@ function renderUI(products, error = null) {
             <div class="col-12 text-center py-5">
                 <i class="fa fa-exclamation-triangle fa-3x text-warning mb-3"></i>
                 <h5 class="text-secondary">Oops! We couldn't load the products right now.</h5>
-                <p>Please make sure your Node.js backend is running on port 5000.</p>
+                <p>Please make sure your Node.js backend is running on port 3000.</p>
             </div>
         `;
         return;

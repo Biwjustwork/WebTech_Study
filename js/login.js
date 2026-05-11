@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // ยิง API ไปยังระบบ Login
-                const response = await fetch('http://localhost:5000/api/auth/login', {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -88,8 +88,8 @@ async function handleUserRegistration(e) {
     // --- ส่วนที่ 2: API Call ---
     try {
         // ยิง Request แบบ POST ไปยัง /api/auth/register
-        // ใช้ Base URL ให้สอดคล้องกับฝั่ง Login (http://localhost:5000)
-        const response = await fetch('http://localhost:5000/api/auth/register', {
+        // ใช้ Base URL ให้สอดคล้องกับฝั่ง Login (http://localhost:3000)
+        const response = await fetch('http://localhost:3000/api/auth/register', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',

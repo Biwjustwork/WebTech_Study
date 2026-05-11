@@ -27,7 +27,7 @@ document.getElementById('checkout-form').addEventListener('submit', async (e) =>
 
     // 4. ส่งข้อมูลไปยัง Backend
     try {
-        const response = await fetch('http://localhost:5000/api/checkout', { 
+        const response = await fetch('http://localhost:3000/api/checkout', { 
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
