@@ -31,18 +31,22 @@ The front-end utilizes a modular approach, relying on dedicated service classes 
    cd ecommerce-backend
    
 2. Install dependencies:
-npm install
+   ```bash
+   npm install
 
 3. Set up environment variables:
-Create a .env file in the ecommerce-backend directory based on the .env.example:
-PORT=3000
-JWT_SECRET=your_jwt_secret
+   ```bash
+   Create a .env file in the ecommerce-backend directory based on the .env.example:
+   PORT=3000
+   JWT_SECRET=your_jwt_secret
 
 4. Initialize the database:
-node init-db.js
+   ```bash
+   node init-db.js
 
 5. Start the server:
-npm start
+   ```bash
+   npm start
 
 ### Frontend Setup
 1. Open index.html in your browser, or use a local development server (like VS Code Live Server) to serve the static files from the root directory.
