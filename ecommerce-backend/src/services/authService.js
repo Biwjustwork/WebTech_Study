@@ -28,12 +28,15 @@ const loginUser = async (email, password) => {
     
     // Use the generated secret and a reasonable expiration
     const token = jwt.sign(
-        { id: user.userId }, // Minimized payload
+        { 
+            id: user.userId, 
+            email: user.email // ✅ เพิ่ม Email ลงใน Payload เพื่อใช้ตรวจสอบสิทธิ์
+        }, 
         process.env.JWT_SECRET, 
         { 
-            expiresIn: '2h', // Short lived for security
-            audience: 'ecommerce-frontend', // Optional: verify who the token is for
-            issuer: 'ecommerce-backend'     // Optional: verify who created the token
+            expiresIn: '2h',
+            audience: 'ecommerce-frontend',
+            issuer: 'ecommerce-backend'
         }
     );
     return { token, user };
