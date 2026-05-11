@@ -13,9 +13,9 @@ async function migrateData() {
     console.log('Connected to SQLite. Starting data migration...');
 
     try {
-        const usersData = JSON.parse(await fs.readFile(path.join(__dirname, 'data', 'users.json'), 'utf8'));
-        const productsData = JSON.parse(await fs.readFile(path.join(__dirname, 'data', 'products.json'), 'utf8'));
-        const ordersData = JSON.parse(await fs.readFile(path.join(__dirname, 'data', 'orders.json'), 'utf8'));
+        const usersData = JSON.parse(await fs.readFile(path.join(__dirname, 'mock-data', 'users.json'), 'utf8'));
+        const productsData = JSON.parse(await fs.readFile(path.join(__dirname, 'mock-data', 'products.json'), 'utf8'));
+        const ordersData = JSON.parse(await fs.readFile(path.join(__dirname, 'mock-data', 'orders.json'), 'utf8'));
 
         const emailToUserIdMap = {};
         for (const user of usersData) {

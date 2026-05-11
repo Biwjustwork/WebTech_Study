@@ -26,8 +26,16 @@ const loginUser = async (email, password) => {
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) throw new Error('Invalid email or password');
     
-    // Business Logic: สร้าง JWT Token
-    const token = jwt.sign({ id: user.userId, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Use the generated secret and a reasonable expiration
+    const token = jwt.sign(
+        { id: user.userId }, // Minimized payload
+        process.env.JWT_SECRET, 
+        { 
+            expiresIn: '2h', // Short lived for security
+            audience: 'ecommerce-frontend', // Optional: verify who the token is for
+            issuer: 'ecommerce-backend'     // Optional: verify who created the token
+        }
+    );
     return { token, user };
 };
 

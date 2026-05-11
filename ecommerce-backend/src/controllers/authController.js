@@ -1,35 +1,42 @@
 const authService = require('../services/authService');
 
-const register = async (req, res) => {
+const register = async (req, res, next) => { // Added 'next' for global error handling
     try {
-        const { name, email, password } = req.body; // รับค่าจาก Request
-        const userId = await authService.registerUser(name, email, password); // โยนให้ Service จัดการ
+        // Because of our middleware, we know these exist and are valid format
+        const { name, email, password } = req.body; 
         
-        res.status(201).json({ message: 'User registered successfully', userId });
+        const userId = await authService.registerUser(name, email, password);
+        
+        return res.status(201).json({ 
+            success: true,
+            message: 'User registered successfully', 
+            userId 
+        });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        // Instead of res.status(400), pass it to our global handler (Point 8 in checklist)
+        next(error); 
     }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
         // ✅ รับค่า user ออกมาจาก authService ด้วย
         const { token, user } = await authService.loginUser(email, password);
         
-        // ✅ แนบ user ส่งคืนไปให้หน้าเว็บ
-        res.status(200).json({ 
+        return res.status(200).json({ 
+            success: true,
             message: 'Login successful', 
-            token: token,
+            token,
             user: {
                 id: user.userId,
-                username: user.username, // 👈 แปลงจากคอลัมน์ username ใน DB ให้เป็น username ที่หน้าเว็บตามหา
+                username: user.username,
                 email: user.email
             }
         });
     } catch (error) {
-        console.error("Login Error:", error);
-        res.status(500).json({ message: "Server error" });
+        // This will catch "Invalid email or password" from your service
+        next(error); 
     }
 };
 

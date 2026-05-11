@@ -1,8 +1,13 @@
 // ecommerce-backend/init-db.js
-const sqlite3 = require('sqlite3').verbose();
+const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
+let dbInstance = null;
+
 async function setupDatabase() {
+    // Return existing connection if already initialized (Singleton Pattern)
+    if (dbInstance) return dbInstance;
+
     try {
         const db = await open({
             filename: './store.db',
@@ -11,6 +16,8 @@ async function setupDatabase() {
 
         console.log('Connected to the SQLite database.');
         await db.exec('PRAGMA foreign_keys = ON;');
+        await db.exec('PRAGMA journal_mode = WAL;');
+        await db.exec('PRAGMA synchronous = NORMAL;');
 
         // 1. ตาราง USERS
         await db.exec(`
@@ -65,10 +72,12 @@ async function setupDatabase() {
         console.log('Table ORDER_ITEMS created successfully.');
 
         console.log('Database initialization completed.');
-        await db.close();
+        dbInstance = db;
+        return dbInstance;
 
     } catch (err) {
         console.error('Error during database setup:', err.message);
+        throw err; // In production, crash the app if DB fails to load
     }
 }
 

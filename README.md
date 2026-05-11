@@ -35,16 +35,25 @@ The front-end utilizes a modular approach, relying on dedicated service classes 
    npm install
 
 3. Set up environment variables:
-   ```bash
    Create a .env file in the ecommerce-backend directory based on the .env.example:
+   ```bash
    PORT=3000
    JWT_SECRET=your_jwt_secret
 
-4. Initialize the database:
+4. Run this command in your terminal:
+   3.1 Run this command in your terminal:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+   
+5. Copy the resulting long string and paste it into your production .env file:
+   ```bash
+   JWT_SECRET=your_generated_long_random_string_here
+   
+6. Initialize the database:
    ```bash
    node init-db.js
 
-5. Start the server:
+7. Start the server:
    ```bash
    npm start
 
